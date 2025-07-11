@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useState, memo } from 'react';
+import { useForm, UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Edit, Trash2, Settings } from 'lucide-react';
@@ -22,7 +22,7 @@ const categorySchema = z.object({
   icon: z.string().min(1, 'กรุณาเลือกไอคอน')
 });
 
-type CategoryForm = z.infer<typeof categorySchema>;
+type CategoryFormData = z.infer<typeof categorySchema>;
 
 const availableIcons = [
   '💰', '💼', '📈', '💵', '🎯', '🏆', '💎', '🌟',
@@ -31,6 +31,93 @@ const availableIcons = [
   '💳', '🎁', '🧾', '📊', '⚡', '🔧', '🎨', '🧘'
 ];
 
+interface CategoryFormProps {
+  form: UseFormReturn<CategoryFormData>;
+  onSubmit: (data: CategoryFormData) => void;
+}
+
+const CategoryForm = memo<CategoryFormProps>(({ form, onSubmit }) => (
+  <Form {...form}>
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <FormField
+        control={form.control}
+        name="type"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>ประเภท</FormLabel>
+            <FormControl>
+              <RadioGroup
+                onValueChange={field.onChange}
+                value={field.value}
+                className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="income" id="income" />
+                  <Label htmlFor="income" className="text-green-600 font-medium">
+                    รายรับ
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="expense" id="expense" />
+                  <Label htmlFor="expense" className="text-red-600 font-medium">
+                    รายจ่าย
+                  </Label>
+                </div>
+              </RadioGroup>
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="name"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>ชื่อหมวดหมู่</FormLabel>
+            <FormControl>
+              <Input placeholder="ใส่ชื่อหมวดหมู่" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={form.control}
+        name="icon"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>ไอคอน</FormLabel>
+            <Select onValueChange={field.onChange} value={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent className="max-h-60">
+                {availableIcons.map((icon) => (
+                  <SelectItem key={icon} value={icon}>
+                    <span className="text-lg">{icon}</span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <Button type="submit" className="w-full">
+        บันทึก
+      </Button>
+    </form>
+  </Form>
+));
+
+CategoryForm.displayName = 'CategoryForm';
+
 const Categories = () => {
   const { toast } = useToast();
   const { categories, addCategory, updateCategory, deleteCategory } = useFirebaseData();
@@ -38,7 +125,7 @@ const Categories = () => {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const form = useForm<CategoryForm>({
+  const form = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
       name: '',
@@ -47,14 +134,14 @@ const Categories = () => {
     }
   });
 
-  const editForm = useForm<CategoryForm>({
+  const editForm = useForm<CategoryFormData>({
     resolver: zodResolver(categorySchema)
   });
 
   const incomeCategories = categories.filter(cat => cat.type === 'income');
   const expenseCategories = categories.filter(cat => cat.type === 'expense');
 
-  const onAddSubmit = async (data: CategoryForm) => {
+  const onAddSubmit = async (data: CategoryFormData) => {
     try {
       await addCategory({
         name: data.name,
@@ -76,7 +163,7 @@ const Categories = () => {
     }
   };
 
-  const onEditSubmit = async (data: CategoryForm) => {
+  const onEditSubmit = async (data: CategoryFormData) => {
     if (!editingCategory) return;
 
     try {
@@ -160,86 +247,6 @@ const Categories = () => {
         </AlertDialog>
       </div>
     </div>
-  );
-
-  const CategoryForm = ({ form, onSubmit }: { form: any; onSubmit: (data: CategoryForm) => void }) => (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ประเภท</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  value={field.value}
-                  className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6"
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="income" id="income" />
-                    <Label htmlFor="income" className="text-green-600 font-medium">
-                      รายรับ
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="expense" id="expense" />
-                    <Label htmlFor="expense" className="text-red-600 font-medium">
-                      รายจ่าย
-                    </Label>
-                  </div>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ชื่อหมวดหมู่</FormLabel>
-              <FormControl>
-                <Input placeholder="ใส่ชื่อหมวดหมู่" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="icon"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ไอคอน</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent className="max-h-60">
-                  {availableIcons.map((icon) => (
-                    <SelectItem key={icon} value={icon}>
-                      <span className="text-lg">{icon}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <Button type="submit" className="w-full">
-          บันทึก
-        </Button>
-      </form>
-    </Form>
   );
 
   return (
