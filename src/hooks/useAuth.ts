@@ -114,7 +114,15 @@ export const useAuth = () => {
 
 
   const signOut = async () => {
+    console.log('Logout clicked...');
     const { error } = await supabase.auth.signOut();
+    console.log('Logout result:', error);
+    
+    if (!error) {
+      // Redirect to auth page after successful logout
+      window.location.href = '/auth';
+    }
+    
     return { error };
   };
 
