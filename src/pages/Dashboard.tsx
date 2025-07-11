@@ -83,12 +83,12 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Header Controls */}
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground">แดชบอร์ด</h1>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">แดชบอร์ด</h1>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
           <Select value={viewMode} onValueChange={(value: 'monthly' | 'yearly') => setViewMode(value)}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -99,7 +99,7 @@ const Dashboard = () => {
 
           {viewMode === 'monthly' ? (
             <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>
@@ -113,7 +113,7 @@ const Dashboard = () => {
             </Select>
           ) : (
             <Select value={selectedMonth.split('-')[0]} onValueChange={(year) => setSelectedMonth(year + '-01')}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-full sm:w-32">
                 <Calendar className="h-4 w-4 mr-2" />
                 <SelectValue />
               </SelectTrigger>

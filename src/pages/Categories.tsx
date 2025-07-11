@@ -124,21 +124,22 @@ const Categories = () => {
 
   const CategoryCard = ({ category }: { category: Category }) => (
     <div className="flex items-center justify-between p-3 bg-card border rounded-lg">
-      <div className="flex items-center space-x-3">
-        <span className="text-xl">{category.icon}</span>
-        <span className="font-medium">{category.name}</span>
+      <div className="flex items-center space-x-3 min-w-0 flex-1">
+        <span className="text-xl flex-shrink-0">{category.icon}</span>
+        <span className="font-medium truncate">{category.name}</span>
       </div>
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1 flex-shrink-0">
         <Button
           size="sm"
           variant="outline"
           onClick={() => handleEdit(category)}
+          className="h-8 w-8 p-0"
         >
           <Edit className="h-4 w-4" />
         </Button>
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" className="h-8 w-8 p-0">
               <Trash2 className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
@@ -174,7 +175,7 @@ const Categories = () => {
                 <RadioGroup
                   onValueChange={field.onChange}
                   value={field.value}
-                  className="flex space-x-6"
+                  className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6"
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="income" id="income" />
@@ -243,15 +244,15 @@ const Categories = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold text-foreground flex items-center space-x-2">
-          <Settings className="h-8 w-8" />
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center space-x-2">
+          <Settings className="h-6 w-6 md:h-8 md:w-8" />
           <span>จัดการหมวดหมู่</span>
         </h1>
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               เพิ่มหมวดหมู่
             </Button>

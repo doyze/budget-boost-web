@@ -78,7 +78,7 @@ const AddTransaction = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto px-4">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -100,7 +100,7 @@ const AddTransaction = () => {
                       <RadioGroup
                         onValueChange={field.onChange}
                         value={field.value}
-                        className="flex space-x-6"
+                        className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6"
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="income" id="income" />
@@ -233,7 +233,7 @@ const AddTransaction = () => {
               />
 
               {/* Submit Buttons */}
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
                 <Button
                   type="button"
                   variant="outline"
