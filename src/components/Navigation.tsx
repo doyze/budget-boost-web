@@ -19,12 +19,12 @@ const Navigation = () => {
     <nav className="bg-card border-b border-border">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-2">
+          <NavLink to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
             <BarChart3 className="h-6 w-6 md:h-8 md:w-8 text-primary" />
             <h1 className="text-lg md:text-xl font-bold text-foreground">
               <span className="hidden sm:block">จัดการรายรับรายจ่าย</span>
             </h1>
-          </div>
+          </NavLink>
           
           <div className="hidden md:flex items-center space-x-4">
             {navItems.map(({ to, icon: Icon, label }) => (
