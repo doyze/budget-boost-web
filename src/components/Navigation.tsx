@@ -11,7 +11,8 @@ const Navigation = () => {
   console.log('Navigation rendered, user:', user);
   
   const navItems = [
-    { to: '/', icon: Plus, label: 'เพิ่มรายการ' },
+    { to: '/', icon: Home, label: 'หน้าหลัก' },
+    { to: '/add', icon: Plus, label: 'เพิ่มรายการ' },
     { to: '/categories', icon: Settings, label: 'จัดการหมวดหมู่' },
   ];
 
