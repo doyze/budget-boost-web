@@ -3,13 +3,13 @@ import { getDatabase } from 'firebase/database';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBtgaSSPdaw5inAhiiVsmo9qMeoUauO6rY",
-  authDomain: "doyzetest.firebaseapp.com",
-  databaseURL: "https://doyzetest-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "doyzetest",
-  storageBucket: "doyzetest.firebasestorage.app",
-  messagingSenderId: "682905004511",
-  appId: "1:682905004511:web:c5a738e30c5fc5dc37fc6a"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase

@@ -15,9 +15,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
 
 const transactionSchema = z.object({
@@ -32,7 +32,6 @@ type TransactionForm = z.infer<typeof transactionSchema>;
 
 const AddTransaction = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -51,23 +50,14 @@ const AddTransaction = () => {
     }
   });
 
-  // Fetch categories
+  const { categories: supabaseCategories, uploadTransactionImage, addTransaction } = useSupabaseData();
+  
+  // Set categories from useSupabaseData hook
   useEffect(() => {
-    const fetchCategories = async () => {
-      if (!user) return;
-      
-      const { data } = await supabase
-        .from('categories')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      setCategories(data || []);
-    };
-    
-    if (user) {
-      fetchCategories();
+    if (supabaseCategories) {
+      setCategories(supabaseCategories);
     }
-  }, [user]);
+  }, [supabaseCategories]);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -86,28 +76,6 @@ const AddTransaction = () => {
     }
   };
 
-  const uploadImage = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-    
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-    
-    const { error } = await supabase.storage
-      .from('transaction-images')
-      .upload(fileName, file);
-
-    if (error) {
-      console.error('Error uploading image:', error);
-      return null;
-    }
-
-    const { data } = supabase.storage
-      .from('transaction-images')
-      .getPublicUrl(fileName);
-
-    return data.publicUrl;
-  };
-
   const onSubmit = async (data: TransactionForm) => {
     if (!user) return;
     
@@ -117,29 +85,27 @@ const AddTransaction = () => {
       
       // Upload image if selected
       if (selectedImage) {
-        imageUrl = await uploadImage(selectedImage);
+        try {
+          imageUrl = await uploadTransactionImage(selectedImage);
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          toast.error('ไม่สามารถอัปโหลดรูปภาพได้');
+          setIsSubmitting(false);
+          return;
+        }
       }
 
-      const { error } = await supabase
-        .from('transactions')
-        .insert({
-          user_id: user.id,
-          type: data.type,
-          amount: data.amount,
-          category_id: data.category_id,
-          description: data.description,
-          image_url: imageUrl,
-          date: format(data.date, 'yyyy-MM-dd')
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: 'สำเร็จ',
-        description: 'เพิ่มรายการเรียบร้อยแล้ว'
+      await addTransaction({
+        type: data.type,
+        amount: data.amount,
+        category_id: data.category_id,
+        description: data.description,
+        image_url: imageUrl,
+        date: format(data.date, 'yyyy-MM-dd')
       });
 
-      navigate('/');
+      toast.success('เพิ่มรายการสำเร็จ');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error adding transaction:', error);
       toast({
