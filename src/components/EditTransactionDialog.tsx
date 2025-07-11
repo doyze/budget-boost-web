@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Edit } from 'lucide-react';
+import { CalendarIcon, Edit, Upload, X, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -23,7 +24,8 @@ const transactionSchema = z.object({
   amount: z.number().min(0.01, 'จำนวนเงินต้องมากกว่า 0'),
   category_id: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
   description: z.string().min(1, 'กรุณาใส่รายละเอียด'),
-  date: z.date()
+  date: z.date(),
+  image_url: z.string().optional()
 });
 
 type TransactionForm = z.infer<typeof transactionSchema>;
@@ -42,7 +44,9 @@ const EditTransactionDialog = ({
   onOpenChange 
 }: EditTransactionDialogProps) => {
   const { toast } = useToast();
-  const { updateTransaction } = useSupabaseData();
+  const { updateTransaction, uploadTransactionImage } = useSupabaseData();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(transaction.image_url || null);
 
   const form = useForm<TransactionForm>({
     resolver: zodResolver(transactionSchema),
@@ -51,21 +55,48 @@ const EditTransactionDialog = ({
       amount: transaction.amount,
       category_id: transaction.category_id || '',
       description: transaction.description,
-      date: new Date(transaction.date)
+      date: new Date(transaction.date),
+      image_url: transaction.image_url || undefined
     }
   });
 
   const watchType = form.watch('type');
   const availableCategories = categories; // Show all categories since they're no longer type-specific
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    form.setValue('image_url', undefined);
+  };
+
   const onSubmit = async (data: TransactionForm) => {
     try {
+      let imageUrl = imagePreview;
+      
+      // Upload new image if selected
+      if (imageFile) {
+        imageUrl = await uploadTransactionImage(imageFile);
+      }
+
       await updateTransaction(transaction.id, {
         type: data.type,
         amount: data.amount,
         category_id: data.category_id,
         description: data.description,
-        date: data.date.toISOString()
+        date: data.date.toISOString(),
+        image_url: imageUrl || undefined
       });
 
       toast({
@@ -232,6 +263,60 @@ const EditTransactionDialog = ({
                       className="resize-none"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Image Upload */}
+            <FormField
+              control={form.control}
+              name="image_url"
+              render={() => (
+                <FormItem>
+                  <FormLabel>รูปภาพ (ไม่บังคับ)</FormLabel>
+                  <FormControl>
+                    <div className="space-y-4">
+                      {imagePreview ? (
+                        <div className="relative inline-block">
+                          <img
+                            src={imagePreview}
+                            alt="Transaction"
+                            className="w-32 h-32 object-cover rounded-lg border"
+                          />
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full p-0"
+                            onClick={removeImage}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                          <div className="text-center">
+                            <Image className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                            <div className="mt-4">
+                              <label htmlFor="edit-image-upload" className="cursor-pointer">
+                                <span className="mt-2 block text-sm font-medium text-muted-foreground">
+                                  คลิกเพื่อเลือกรูปภาพ
+                                </span>
+                                <input
+                                  id="edit-image-upload"
+                                  type="file"
+                                  className="hidden"
+                                  accept="image/*"
+                                  onChange={handleImageChange}
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

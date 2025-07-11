@@ -111,6 +111,26 @@ export const useSupabaseData = () => {
     await fetchCategories();
   };
 
+  const uploadTransactionImage = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}.${fileExt}`;
+    const filePath = `transaction-images/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('transaction-images')
+      .upload(filePath, file);
+
+    if (uploadError) {
+      throw new Error('Failed to upload image');
+    }
+
+    const { data } = supabase.storage
+      .from('transaction-images')
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  };
+
   return {
     transactions,
     categories,
@@ -122,6 +142,7 @@ export const useSupabaseData = () => {
     updateCategory,
     deleteCategory,
     refreshTransactions: fetchTransactions,
-    refreshCategories: fetchCategories
+    refreshCategories: fetchCategories,
+    uploadTransactionImage
   };
 };
