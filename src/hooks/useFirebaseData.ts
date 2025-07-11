@@ -65,7 +65,9 @@ export const useFirebaseData = () => {
       if (data) {
         const transactionsList = Object.keys(data).map(key => ({
           id: key,
-          ...data[key]
+          ...data[key],
+          // Add email to existing transactions that don't have it
+          email: data[key].email || user.email || ''
         }));
         setTransactions(transactionsList);
       } else {
@@ -79,7 +81,11 @@ export const useFirebaseData = () => {
       if (data) {
         const categoriesList = Object.keys(data).map(key => ({
           id: key,
-          ...data[key]
+          ...data[key],
+          // Add email to existing categories that don't have it
+          email: data[key].email || user.email || '',
+          // Mark existing categories as default if they don't have isDefault field
+          isDefault: data[key].isDefault !== undefined ? data[key].isDefault : true
         }));
         setCategories(categoriesList);
       } else {
