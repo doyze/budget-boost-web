@@ -115,15 +115,28 @@ export const useAuth = () => {
 
   const signOut = async () => {
     console.log('Logout clicked...');
-    const { error } = await supabase.auth.signOut();
-    console.log('Logout result:', error);
     
-    if (!error) {
-      // Redirect to auth page after successful logout
+    try {
+      // Clear local state first
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      setUserRoles([]);
+      
+      // Then sign out from Supabase
+      const { error } = await supabase.auth.signOut();
+      console.log('Logout result:', error);
+      
+      // Force redirect regardless of error (for session not found cases)
       window.location.href = '/auth';
+      
+      return { error };
+    } catch (err) {
+      console.error('Logout error:', err);
+      // Force redirect even if there's an error
+      window.location.href = '/auth';
+      return { error: err };
     }
-    
-    return { error };
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
