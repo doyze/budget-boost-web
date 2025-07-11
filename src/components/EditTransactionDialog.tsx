@@ -90,7 +90,8 @@ const EditTransactionDialog = ({
         imageUrl = await uploadTransactionImage(imageFile);
       }
 
-      await updateTransaction(transaction.id, {
+      // อัปเดตรายการธุรกรรม
+      const updatedTransaction = await updateTransaction(transaction.id, {
         type: data.type,
         amount: data.amount,
         category_id: data.category_id,
