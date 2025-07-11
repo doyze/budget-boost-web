@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { th } from 'date-fns/locale';
-import { Edit, Trash2, Plus, Eye } from 'lucide-react';
+import { Edit, Trash2, Plus, Eye, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ const TransactionList = ({ transactions, categories, title = "รายการ
   const { deleteTransaction } = useSupabaseData();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [viewingTransaction, setViewingTransaction] = useState<Transaction | null>(null);
+  const [imageZoom, setImageZoom] = useState(false);
 
   const sortedTransactions = [...transactions].sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -164,65 +165,118 @@ const TransactionList = ({ transactions, categories, title = "รายการ
       {/* View Transaction Dialog */}
       {viewingTransaction && (
         <Dialog open={!!viewingTransaction} onOpenChange={(open) => !open && setViewingTransaction(null)}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2">
-                <Eye className="h-5 w-5" />
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="flex items-center space-x-2 text-xl">
+                <Eye className="h-6 w-6 text-primary" />
                 <span>รายละเอียดรายการ</span>
               </DialogTitle>
             </DialogHeader>
             
-            <div className="space-y-6">
-              {/* Transaction Type */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">ประเภท</label>
-                <p className={`font-medium ${viewingTransaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                  {viewingTransaction.type === 'income' ? 'รายรับ' : 'รายจ่าย'}
-                </p>
+            <div className="space-y-6 p-1">
+              {/* Transaction Type Badge */}
+              <div className="flex justify-center">
+                <Badge 
+                  variant={viewingTransaction.type === 'income' ? 'default' : 'secondary'}
+                  className={`px-4 py-2 text-base font-medium ${
+                    viewingTransaction.type === 'income' 
+                      ? 'bg-green-100 text-green-800 hover:bg-green-100' 
+                      : 'bg-red-100 text-red-800 hover:bg-red-100'
+                  }`}
+                >
+                  {viewingTransaction.type === 'income' ? '📈 รายรับ' : '📉 รายจ่าย'}
+                </Badge>
               </div>
 
-              {/* Amount */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">จำนวนเงิน</label>
-                <p className={`text-lg font-bold ${viewingTransaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+              {/* Amount - Prominent Display */}
+              <div className="text-center py-4 bg-muted/30 rounded-lg border">
+                <label className="text-sm font-medium text-muted-foreground block mb-2">จำนวนเงิน</label>
+                <p className={`text-3xl font-bold ${viewingTransaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
                   {viewingTransaction.type === 'income' ? '+' : '-'}฿{viewingTransaction.amount.toLocaleString()}
                 </p>
               </div>
 
-              {/* Category */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">หมวดหมู่</label>
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg">{getCategoryInfo(viewingTransaction.category_id || '').icon}</span>
-                  <span>{getCategoryInfo(viewingTransaction.category_id || '').name}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Category */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">หมวดหมู่</label>
+                  <div className="flex items-center space-x-3 p-3 bg-muted/30 rounded-lg border">
+                    <span className="text-2xl">{getCategoryInfo(viewingTransaction.category_id || '').icon}</span>
+                    <span className="font-medium">{getCategoryInfo(viewingTransaction.category_id || '').name}</span>
+                  </div>
+                </div>
+
+                {/* Date */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-muted-foreground">วันที่</label>
+                  <div className="p-3 bg-muted/30 rounded-lg border">
+                    <p className="font-medium">{format(new Date(viewingTransaction.date), 'dd MMMM yyyy', { locale: th })}</p>
+                    <p className="text-sm text-muted-foreground">{format(new Date(viewingTransaction.date), 'EEEE', { locale: th })}</p>
+                  </div>
                 </div>
               </div>
 
-              {/* Date */}
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">วันที่</label>
-                <p>{format(new Date(viewingTransaction.date), 'dd MMMM yyyy', { locale: th })}</p>
-              </div>
-
               {/* Description */}
-              <div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-muted-foreground">รายละเอียด</label>
-                <p className="whitespace-pre-wrap">{viewingTransaction.description}</p>
+                <div className="p-4 bg-muted/30 rounded-lg border min-h-[60px]">
+                  <p className="whitespace-pre-wrap leading-relaxed">{viewingTransaction.description || 'ไม่มีรายละเอียด'}</p>
+                </div>
               </div>
 
               {/* Image */}
               {viewingTransaction.image_url && (
-                <div>
+                <div className="space-y-2">
                   <label className="text-sm font-medium text-muted-foreground">รูปภาพ</label>
-                  <div className="mt-2">
+                  <div className="border rounded-lg overflow-hidden bg-muted/30">
                     <img
                       src={viewingTransaction.image_url}
                       alt="Transaction"
-                      className="max-w-full h-auto rounded-lg border max-h-64 object-contain"
+                      className="w-full h-auto max-h-64 object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => setImageZoom(true)}
                     />
                   </div>
+                  <p className="text-xs text-muted-foreground text-center">คลิกที่รูปเพื่อดูขนาดเต็m</p>
                 </div>
               )}
+
+              {/* Transaction Info */}
+              <div className="pt-4 border-t space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">สร้างเมื่อ:</span>
+                  <span>{format(new Date(viewingTransaction.created_at), 'dd MMM yyyy HH:mm', { locale: th })}</span>
+                </div>
+                {viewingTransaction.updated_at !== viewingTransaction.created_at && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">แก้ไขล่าสุด:</span>
+                    <span>{format(new Date(viewingTransaction.updated_at), 'dd MMM yyyy HH:mm', { locale: th })}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Image Zoom Dialog */}
+      {imageZoom && viewingTransaction?.image_url && (
+        <Dialog open={imageZoom} onOpenChange={setImageZoom}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 overflow-hidden">
+            <div className="relative w-full h-full flex items-center justify-center bg-black/90">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-4 right-4 z-10 text-white hover:bg-white/20"
+                onClick={() => setImageZoom(false)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+              <img
+                src={viewingTransaction.image_url}
+                alt="Transaction - Full Size"
+                className="max-w-full max-h-full object-contain"
+                onClick={() => setImageZoom(false)}
+              />
             </div>
           </DialogContent>
         </Dialog>
