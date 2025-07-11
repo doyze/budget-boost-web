@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { ref, onValue, push, set, remove, update } from 'firebase/database';
 import { database } from '@/lib/firebase';
 import { Transaction, Category } from '@/types/transaction';
+import { useAuth } from '@/hooks/useAuth';
 
 export const useFirebaseData = () => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,13 +30,20 @@ export const useFirebaseData = () => {
   ];
 
   useEffect(() => {
-    const transactionsRef = ref(database, 'transactions');
-    const categoriesRef = ref(database, 'categories');
+    if (!user) {
+      setTransactions([]);
+      setCategories(defaultCategories);
+      setLoading(false);
+      return;
+    }
+
+    const userTransactionsRef = ref(database, `users/${user.id}/transactions`);
+    const userCategoriesRef = ref(database, `users/${user.id}/categories`);
 
     // Initialize default categories if not exists
     const initializeCategories = async () => {
       const categoriesSnapshot = await new Promise((resolve) => {
-        onValue(categoriesRef, resolve, { onlyOnce: true });
+        onValue(userCategoriesRef, resolve, { onlyOnce: true });
       });
       
       if (!(categoriesSnapshot as any).exists()) {
@@ -42,12 +51,12 @@ export const useFirebaseData = () => {
         defaultCategories.forEach(cat => {
           categoriesObj[cat.id] = cat;
         });
-        await set(categoriesRef, categoriesObj);
+        await set(userCategoriesRef, categoriesObj);
       }
     };
 
-    // Listen to transactions
-    const unsubscribeTransactions = onValue(transactionsRef, (snapshot) => {
+    // Listen to user's transactions
+    const unsubscribeTransactions = onValue(userTransactionsRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const transactionsList = Object.keys(data).map(key => ({
@@ -60,8 +69,8 @@ export const useFirebaseData = () => {
       }
     });
 
-    // Listen to categories
-    const unsubscribeCategories = onValue(categoriesRef, (snapshot) => {
+    // Listen to user's categories
+    const unsubscribeCategories = onValue(userCategoriesRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const categoriesList = Object.keys(data).map(key => ({
@@ -81,12 +90,14 @@ export const useFirebaseData = () => {
       unsubscribeTransactions();
       unsubscribeCategories();
     };
-  }, []);
+  }, [user]);
 
   const addTransaction = async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const transactionsRef = ref(database, 'transactions');
+    if (!user) return;
+    
+    const userTransactionsRef = ref(database, `users/${user.id}/transactions`);
     const now = new Date().toISOString();
-    const newTransactionRef = push(transactionsRef);
+    const newTransactionRef = push(userTransactionsRef);
     
     await set(newTransactionRef, {
       ...transaction,
@@ -96,7 +107,9 @@ export const useFirebaseData = () => {
   };
 
   const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
-    const transactionRef = ref(database, `transactions/${id}`);
+    if (!user) return;
+    
+    const transactionRef = ref(database, `users/${user.id}/transactions/${id}`);
     await update(transactionRef, {
       ...updates,
       updatedAt: new Date().toISOString()
@@ -104,23 +117,31 @@ export const useFirebaseData = () => {
   };
 
   const deleteTransaction = async (id: string) => {
-    const transactionRef = ref(database, `transactions/${id}`);
+    if (!user) return;
+    
+    const transactionRef = ref(database, `users/${user.id}/transactions/${id}`);
     await remove(transactionRef);
   };
 
   const addCategory = async (category: Omit<Category, 'id'>) => {
-    const categoriesRef = ref(database, 'categories');
-    const newCategoryRef = push(categoriesRef);
+    if (!user) return;
+    
+    const userCategoriesRef = ref(database, `users/${user.id}/categories`);
+    const newCategoryRef = push(userCategoriesRef);
     await set(newCategoryRef, category);
   };
 
   const updateCategory = async (id: string, updates: Partial<Category>) => {
-    const categoryRef = ref(database, `categories/${id}`);
+    if (!user) return;
+    
+    const categoryRef = ref(database, `users/${user.id}/categories/${id}`);
     await update(categoryRef, updates);
   };
 
   const deleteCategory = async (id: string) => {
-    const categoryRef = ref(database, `categories/${id}`);
+    if (!user) return;
+    
+    const categoryRef = ref(database, `users/${user.id}/categories/${id}`);
     await remove(categoryRef);
   };
 
