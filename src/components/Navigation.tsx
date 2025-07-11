@@ -1,11 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Plus, Settings, BarChart3, Moon, Sun } from 'lucide-react';
+import { Home, Plus, Settings, BarChart3, Moon, Sun, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 const Navigation = () => {
   const { theme, setTheme } = useTheme();
+  const { user, profile, signOut } = useAuth();
   
   const navItems = [
     { to: '/', icon: Home, label: 'หน้าหลัก' },
@@ -65,12 +67,41 @@ const Navigation = () => {
             ))}
           </div>
           
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
+            {user ? (
+              <>
+                <div className="hidden sm:flex items-center space-x-2 text-sm">
+                  <span className="text-muted-foreground">สวัสดี</span>
+                  <span className="font-medium">
+                    {profile?.first_name || user.email}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => signOut()}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="sr-only">ออกจากระบบ</span>
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.href = '/auth'}
+                className="hidden sm:flex"
+              >
+                <User className="h-4 w-4 mr-2" />
+                เข้าสู่ระบบ
+              </Button>
+            )}
+            
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="ml-2"
               data-theme={theme}
             >
               <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
