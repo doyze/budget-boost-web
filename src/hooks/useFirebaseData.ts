@@ -49,7 +49,10 @@ export const useFirebaseData = () => {
       if (!(categoriesSnapshot as any).exists()) {
         const categoriesObj: Record<string, Category> = {};
         defaultCategories.forEach(cat => {
-          categoriesObj[cat.id] = cat;
+          categoriesObj[cat.id] = {
+            ...cat,
+            email: user.email || ''
+          };
         });
         await set(userCategoriesRef, categoriesObj);
       }
@@ -124,12 +127,15 @@ export const useFirebaseData = () => {
     await remove(transactionRef);
   };
 
-  const addCategory = async (category: Omit<Category, 'id'>) => {
+  const addCategory = async (category: Omit<Category, 'id' | 'email'>) => {
     if (!user) return;
     
     const userCategoriesRef = ref(database, `users/${user.id}/categories`);
     const newCategoryRef = push(userCategoriesRef);
-    await set(newCategoryRef, category);
+    await set(newCategoryRef, {
+      ...category,
+      email: user.email || ''
+    });
   };
 
   const updateCategory = async (id: string, updates: Partial<Category>) => {

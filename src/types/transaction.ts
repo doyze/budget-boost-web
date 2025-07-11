@@ -15,6 +15,7 @@ export interface Category {
   name: string;
   type: 'income' | 'expense';
   icon?: string;
+  email?: string; // User email for identification
 }
 
 export interface MonthlyData {
