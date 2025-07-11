@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, Upload, X, Image } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -16,13 +16,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useFirebaseData } from '@/hooks/useFirebaseData';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 const transactionSchema = z.object({
   type: z.enum(['income', 'expense']),
   amount: z.number().min(0.01, 'จำนวนเงินต้องมากกว่า 0'),
-  category: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
+  category_id: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
   description: z.string().min(1, 'กรุณาใส่รายละเอียด'),
   date: z.date()
 });
@@ -32,33 +33,106 @@ type TransactionForm = z.infer<typeof transactionSchema>;
 const AddTransaction = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { categories, addTransaction } = useFirebaseData();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<TransactionForm>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       type: 'expense',
       amount: 0,
-      category: '',
+      category_id: '',
       description: '',
       date: new Date()
     }
   });
 
-  const watchType = form.watch('type');
-  const availableCategories = categories.filter(cat => cat.type === watchType);
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      setCategories(data || []);
+    };
+    
+    if (user) {
+      fetchCategories();
+    }
+  }, [user]);
+
+  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setPreviewUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+    
+    const { error } = await supabase.storage
+      .from('transaction-images')
+      .upload(fileName, file);
+
+    if (error) {
+      console.error('Error uploading image:', error);
+      return null;
+    }
+
+    const { data } = supabase.storage
+      .from('transaction-images')
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+  };
 
   const onSubmit = async (data: TransactionForm) => {
+    if (!user) return;
+    
     setIsSubmitting(true);
     try {
-      await addTransaction({
-        type: data.type,
-        amount: data.amount,
-        category: data.category,
-        description: data.description,
-        date: data.date.toISOString()
-      });
+      let imageUrl = null;
+      
+      // Upload image if selected
+      if (selectedImage) {
+        imageUrl = await uploadImage(selectedImage);
+      }
+
+      const { error } = await supabase
+        .from('transactions')
+        .insert({
+          user_id: user.id,
+          type: data.type,
+          amount: data.amount,
+          category_id: data.category_id,
+          description: data.description,
+          image_url: imageUrl,
+          date: format(data.date, 'yyyy-MM-dd')
+        });
+
+      if (error) throw error;
 
       toast({
         title: 'สำเร็จ',
@@ -67,6 +141,7 @@ const AddTransaction = () => {
 
       navigate('/');
     } catch (error) {
+      console.error('Error adding transaction:', error);
       toast({
         title: 'เกิดข้อผิดพลาด',
         description: 'ไม่สามารถเพิ่มรายการได้',
@@ -145,7 +220,7 @@ const AddTransaction = () => {
               {/* Category */}
               <FormField
                 control={form.control}
-                name="category"
+                name="category_id"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>หมวดหมู่</FormLabel>
@@ -156,7 +231,7 @@ const AddTransaction = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {availableCategories.map((category) => (
+                        {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
                             <div className="flex items-center space-x-2">
                               <span>{category.icon}</span>
@@ -212,6 +287,53 @@ const AddTransaction = () => {
                   </FormItem>
                 )}
               />
+
+              {/* Image Upload */}
+              <div className="space-y-2">
+                <FormLabel>รูปภาพ (ไม่จำเป็น)</FormLabel>
+                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-4">
+                  {previewUrl ? (
+                    <div className="relative">
+                      <img 
+                        src={previewUrl} 
+                        alt="Preview" 
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={removeImage}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <Image className="mx-auto h-12 w-12 text-muted-foreground mb-2" />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        เลือกรูปภาพ
+                      </Button>
+                      <p className="text-sm text-muted-foreground mt-2">
+                        JPG, PNG, GIF (ขนาดไม่เกิน 10MB)
+                      </p>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageSelect}
+                    className="hidden"
+                  />
+                </div>
+              </div>
 
               {/* Description */}
               <FormField

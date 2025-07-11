@@ -1,22 +1,24 @@
 export interface Transaction {
   id: string;
+  user_id: string;
   type: 'income' | 'expense';
   amount: number;
-  category: string;
-  description: string;
-  date: string; // ISO string format
-  email: string; // User email for identification
-  createdAt: string;
-  updatedAt: string;
+  category_id?: string;
+  description?: string;
+  image_url?: string;
+  date: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Category {
   id: string;
+  user_id: string;
   name: string;
-  type: 'income' | 'expense';
-  icon?: string;
-  email?: string; // User email for identification
-  isDefault?: boolean; // Mark default categories that cannot be deleted
+  icon: string;
+  color: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface MonthlyData {
