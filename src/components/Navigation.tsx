@@ -1,12 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Plus, Settings, BarChart3, Moon, Sun, LogOut, User } from 'lucide-react';
+import { Home, Plus, Settings, BarChart3, LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
+import { ThemeSelector } from '@/components/ThemeSelector';
 
 const Navigation = () => {
-  const { theme, setTheme } = useTheme();
   const { user, profile, signOut } = useAuth();
   
   const navItems = [
@@ -98,16 +97,7 @@ const Navigation = () => {
               </Button>
             )}
             
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              data-theme={theme}
-            >
-              <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">สลับธีม</span>
-            </Button>
+            <ThemeSelector />
           </div>
         </div>
       </div>
