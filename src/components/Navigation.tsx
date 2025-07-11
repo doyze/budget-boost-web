@@ -8,6 +8,8 @@ import { ThemeSelector } from '@/components/ThemeSelector';
 const Navigation = () => {
   const { user, profile, signOut } = useAuth();
   
+  console.log('Navigation rendered, user:', user);
+  
   const navItems = [
     { to: '/', icon: Plus, label: 'เพิ่มรายการ' },
     { to: '/categories', icon: Settings, label: 'จัดการหมวดหมู่' },
