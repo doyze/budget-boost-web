@@ -9,8 +9,7 @@ const Navigation = () => {
   const { user, profile, signOut } = useAuth();
   
   const navItems = [
-    { to: '/', icon: Home, label: 'หน้าหลัก' },
-    { to: '/add', icon: Plus, label: 'เพิ่มรายการ' },
+    { to: '/', icon: Plus, label: 'เพิ่มรายการ' },
     { to: '/categories', icon: Settings, label: 'จัดการหมวดหมู่' },
   ];
 
@@ -22,7 +21,6 @@ const Navigation = () => {
             <BarChart3 className="h-6 w-6 md:h-8 md:w-8 text-primary" />
             <h1 className="text-lg md:text-xl font-bold text-foreground">
               <span className="hidden sm:block">จัดการรายรับรายจ่าย</span>
-              <span className="sm:hidden">รายรับรายจ่าย</span>
             </h1>
           </div>
           
