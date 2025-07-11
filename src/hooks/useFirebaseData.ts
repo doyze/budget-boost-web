@@ -92,7 +92,7 @@ export const useFirebaseData = () => {
     };
   }, [user]);
 
-  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt' | 'email'>) => {
     if (!user) return;
     
     const userTransactionsRef = ref(database, `users/${user.id}/transactions`);
@@ -101,6 +101,7 @@ export const useFirebaseData = () => {
     
     await set(newTransactionRef, {
       ...transaction,
+      email: user.email || '',
       createdAt: now,
       updatedAt: now
     });

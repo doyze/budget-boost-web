@@ -5,6 +5,7 @@ export interface Transaction {
   category: string;
   description: string;
   date: string; // ISO string format
+  email: string; // User email for identification
   createdAt: string;
   updatedAt: string;
 }
