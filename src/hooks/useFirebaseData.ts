@@ -13,20 +13,20 @@ export const useFirebaseData = () => {
   // Default categories
   const defaultCategories: Category[] = [
     // Income categories
-    { id: 'salary', name: 'เงินเดือน', type: 'income', icon: '💰' },
-    { id: 'freelance', name: 'งานพิเศษ', type: 'income', icon: '💼' },
-    { id: 'investment', name: 'การลงทุน', type: 'income', icon: '📈' },
-    { id: 'other-income', name: 'รายได้อื่นๆ', type: 'income', icon: '💵' },
+    { id: 'salary', name: 'เงินเดือน', type: 'income', icon: '💰', isDefault: true },
+    { id: 'freelance', name: 'งานพิเศษ', type: 'income', icon: '💼', isDefault: true },
+    { id: 'investment', name: 'การลงทุน', type: 'income', icon: '📈', isDefault: true },
+    { id: 'other-income', name: 'รายได้อื่นๆ', type: 'income', icon: '💵', isDefault: true },
     
     // Expense categories
-    { id: 'food', name: 'อาหาร', type: 'expense', icon: '🍔' },
-    { id: 'transport', name: 'ค่าเดินทาง', type: 'expense', icon: '🚗' },
-    { id: 'utilities', name: 'ค่าน้ำค่าไฟ', type: 'expense', icon: '💡' },
-    { id: 'entertainment', name: 'ความบันเทิง', type: 'expense', icon: '🎮' },
-    { id: 'shopping', name: 'ช้อปปิ้ง', type: 'expense', icon: '🛍️' },
-    { id: 'healthcare', name: 'ค่ารักษาพยาบาล', type: 'expense', icon: '🏥' },
-    { id: 'education', name: 'การศึกษา', type: 'expense', icon: '📚' },
-    { id: 'other-expense', name: 'ค่าใช้จ่ายอื่นๆ', type: 'expense', icon: '💸' },
+    { id: 'food', name: 'อาหาร', type: 'expense', icon: '🍔', isDefault: true },
+    { id: 'transport', name: 'ค่าเดินทาง', type: 'expense', icon: '🚗', isDefault: true },
+    { id: 'utilities', name: 'ค่าน้ำค่าไฟ', type: 'expense', icon: '💡', isDefault: true },
+    { id: 'entertainment', name: 'ความบันเทิง', type: 'expense', icon: '🎮', isDefault: true },
+    { id: 'shopping', name: 'ช้อปปิ้ง', type: 'expense', icon: '🛍️', isDefault: true },
+    { id: 'healthcare', name: 'ค่ารักษาพยาบาล', type: 'expense', icon: '🏥', isDefault: true },
+    { id: 'education', name: 'การศึกษา', type: 'expense', icon: '📚', isDefault: true },
+    { id: 'other-expense', name: 'ค่าใช้จ่ายอื่นๆ', type: 'expense', icon: '💸', isDefault: true },
   ];
 
   useEffect(() => {
@@ -51,7 +51,8 @@ export const useFirebaseData = () => {
         defaultCategories.forEach(cat => {
           categoriesObj[cat.id] = {
             ...cat,
-            email: user.email || ''
+            email: user.email || '',
+            isDefault: true
           };
         });
         await set(userCategoriesRef, categoriesObj);
@@ -127,28 +128,49 @@ export const useFirebaseData = () => {
     await remove(transactionRef);
   };
 
-  const addCategory = async (category: Omit<Category, 'id' | 'email'>) => {
+  const addCategory = async (category: Omit<Category, 'id' | 'email' | 'isDefault'>) => {
     if (!user) return;
     
     const userCategoriesRef = ref(database, `users/${user.id}/categories`);
     const newCategoryRef = push(userCategoriesRef);
     await set(newCategoryRef, {
       ...category,
-      email: user.email || ''
+      email: user.email || '',
+      isDefault: false
     });
   };
 
   const updateCategory = async (id: string, updates: Partial<Category>) => {
     if (!user) return;
     
+    // Get category first to check if it's user's own and not default
     const categoryRef = ref(database, `users/${user.id}/categories/${id}`);
+    const categorySnapshot = await new Promise<any>((resolve) => {
+      onValue(categoryRef, resolve, { onlyOnce: true });
+    });
+    
+    const category = categorySnapshot.val();
+    if (!category || category.email !== user.email || category.isDefault) {
+      throw new Error('ไม่สามารถแก้ไขหมวดหมู่นี้ได้');
+    }
+    
     await update(categoryRef, updates);
   };
 
   const deleteCategory = async (id: string) => {
     if (!user) return;
     
+    // Get category first to check if it's user's own and not default
     const categoryRef = ref(database, `users/${user.id}/categories/${id}`);
+    const categorySnapshot = await new Promise<any>((resolve) => {
+      onValue(categoryRef, resolve, { onlyOnce: true });
+    });
+    
+    const category = categorySnapshot.val();
+    if (!category || category.email !== user.email || category.isDefault) {
+      throw new Error('ไม่สามารถลบหมวดหมู่นี้ได้');
+    }
+    
     await remove(categoryRef);
   };
 
