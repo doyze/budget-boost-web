@@ -112,16 +112,6 @@ export const useAuth = () => {
     return { error };
   };
 
-  const signInWithFacebook = async () => {
-    const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'facebook',
-      options: {
-        redirectTo: redirectUrl
-      }
-    });
-    return { error };
-  };
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -158,7 +148,7 @@ export const useAuth = () => {
     signUp,
     signIn,
     signInWithGoogle,
-    signInWithFacebook,
+    
     signOut,
     updateProfile,
     hasRole,
