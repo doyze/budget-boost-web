@@ -50,7 +50,7 @@ const YearlyReport = ({ year, transactions, categories }: YearlyReportProps) => 
     });
 
     yearTransactions.forEach(transaction => {
-      const category = categories.find(cat => cat.id === transaction.category);
+      const category = categories.find(cat => cat.id === transaction.category_id);
       if (category) {
         if (transaction.type === 'income') {
           categoryData[category.name].income += transaction.amount;

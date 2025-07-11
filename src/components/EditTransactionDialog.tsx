@@ -14,14 +14,14 @@ import { Calendar } from '@/components/ui/calendar';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useFirebaseData } from '@/hooks/useFirebaseData';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { Transaction, Category } from '@/types/transaction';
 import { cn } from '@/lib/utils';
 
 const transactionSchema = z.object({
   type: z.enum(['income', 'expense']),
   amount: z.number().min(0.01, 'จำนวนเงินต้องมากกว่า 0'),
-  category: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
+  category_id: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
   description: z.string().min(1, 'กรุณาใส่รายละเอียด'),
   date: z.date()
 });
@@ -42,28 +42,28 @@ const EditTransactionDialog = ({
   onOpenChange 
 }: EditTransactionDialogProps) => {
   const { toast } = useToast();
-  const { updateTransaction } = useFirebaseData();
+  const { updateTransaction } = useSupabaseData();
 
   const form = useForm<TransactionForm>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       type: transaction.type,
       amount: transaction.amount,
-      category: transaction.category,
+      category_id: transaction.category_id || '',
       description: transaction.description,
       date: new Date(transaction.date)
     }
   });
 
   const watchType = form.watch('type');
-  const availableCategories = categories.filter(cat => cat.type === watchType);
+  const availableCategories = categories; // Show all categories since they're no longer type-specific
 
   const onSubmit = async (data: TransactionForm) => {
     try {
       await updateTransaction(transaction.id, {
         type: data.type,
         amount: data.amount,
-        category: data.category,
+        category_id: data.category_id,
         description: data.description,
         date: data.date.toISOString()
       });
@@ -151,7 +151,7 @@ const EditTransactionDialog = ({
             {/* Category */}
             <FormField
               control={form.control}
-              name="category"
+              name="category_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>หมวดหมู่</FormLabel>

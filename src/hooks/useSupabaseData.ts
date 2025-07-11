@@ -18,7 +18,7 @@ export const useSupabaseData = () => {
       .eq('user_id', user.id)
       .order('date', { ascending: false });
     
-    setTransactions(data || []);
+    setTransactions((data || []) as Transaction[]);
   };
 
   const fetchCategories = async () => {
@@ -30,7 +30,7 @@ export const useSupabaseData = () => {
       .eq('user_id', user.id)
       .order('name');
     
-    setCategories(data || []);
+    setCategories((data || []) as Category[]);
   };
 
   useEffect(() => {

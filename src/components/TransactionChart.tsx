@@ -19,7 +19,7 @@ const TransactionChart = ({ transactions, categories }: TransactionChartProps) =
     const expenseData: { [key: string]: number } = {};
 
     transactions.forEach(transaction => {
-      const category = categories.find(cat => cat.id === transaction.category);
+      const category = categories.find(cat => cat.id === transaction.category_id);
       if (!category) return;
 
       if (transaction.type === 'income') {

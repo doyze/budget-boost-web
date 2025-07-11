@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useFirebaseData } from '@/hooks/useFirebaseData';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 import { Transaction, Category } from '@/types/transaction';
 import EditTransactionDialog from './EditTransactionDialog';
 
@@ -19,7 +19,7 @@ interface TransactionListProps {
 
 const TransactionList = ({ transactions, categories, title = "รายการล่าสุด" }: TransactionListProps) => {
   const { toast } = useToast();
-  const { deleteTransaction } = useFirebaseData();
+  const { deleteTransaction } = useSupabaseData();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
 
   const sortedTransactions = [...transactions].sort(
@@ -56,7 +56,7 @@ const TransactionList = ({ transactions, categories, title = "รายการ
           {sortedTransactions.length > 0 ? (
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {sortedTransactions.map((transaction) => {
-                const category = getCategoryInfo(transaction.category);
+                const category = getCategoryInfo(transaction.category_id || '');
                 
                 return (
                   <div

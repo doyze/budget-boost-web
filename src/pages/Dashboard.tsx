@@ -5,13 +5,13 @@ import { Calendar, TrendingUp, TrendingDown, Wallet, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { useFirebaseData } from '@/hooks/useFirebaseData';
+import { useSupabaseData } from '@/hooks/useSupabaseData';
 import TransactionChart from '@/components/TransactionChart';
 import TransactionList from '@/components/TransactionList';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { transactions, categories, loading } = useFirebaseData();
+  const { transactions, categories, loading } = useSupabaseData();
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), 'yyyy-MM'));
 
   const monthlyData = useMemo(() => {
