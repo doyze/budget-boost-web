@@ -12,24 +12,23 @@ export const ThemeSelector: React.FC = () => {
     { value: 'dark', icon: Moon, label: 'Dark' },
   ] as const;
 
+  const currentTheme = themes.find(t => t.value === theme) || themes[0];
+
+  const cycleTheme = () => {
+    const currentIndex = themes.findIndex(t => t.value === theme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    setTheme(themes[nextIndex].value);
+  };
+
   return (
-    <div className="flex items-center space-x-1 bg-muted/50 rounded-lg p-1">
-      {themes.map(({ value, icon: Icon, label }) => (
-        <Button
-          key={value}
-          variant={theme === value ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setTheme(value)}
-          className={`h-8 px-3 ${
-            theme === value 
-              ? 'bg-background text-foreground shadow-sm' 
-              : 'hover:bg-background/80'
-          }`}
-        >
-          <Icon className="h-4 w-4 mr-1" />
-          <span className="text-xs font-medium">{label}</span>
-        </Button>
-      ))}
-    </div>
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={cycleTheme}
+      className="h-8 px-3"
+    >
+      <currentTheme.icon className="h-4 w-4 mr-1" />
+      <span className="text-xs font-medium">{currentTheme.label}</span>
+    </Button>
   );
 };
