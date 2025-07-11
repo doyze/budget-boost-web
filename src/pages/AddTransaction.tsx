@@ -24,7 +24,7 @@ const transactionSchema = z.object({
   type: z.enum(['income', 'expense']),
   amount: z.number().min(0.01, 'จำนวนเงินต้องมากกว่า 0'),
   category_id: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
-  description: z.string().min(1, 'กรุณาใส่รายละเอียด'),
+  description: z.string().optional(),
   date: z.date()
 });
 
@@ -44,7 +44,7 @@ const AddTransaction = () => {
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       type: 'expense',
-      amount: 0,
+      amount: undefined,
       category_id: '',
       description: '',
       date: new Date()
@@ -207,9 +207,10 @@ const AddTransaction = () => {
                       <Input
                         type="number"
                         step="0.01"
-                        placeholder="0.00"
+                        placeholder="ใส่จำนวนเงิน"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                        value={field.value || ''}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
                       />
                     </FormControl>
                     <FormMessage />
@@ -341,7 +342,7 @@ const AddTransaction = () => {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>รายละเอียด</FormLabel>
+                    <FormLabel>รายละเอียด (ไม่จำเป็น)</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder="ใส่รายละเอียดของรายการ"
