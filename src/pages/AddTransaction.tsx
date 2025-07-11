@@ -177,15 +177,21 @@ const AddTransaction = () => {
                         value={field.value}
                         className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-6"
                       >
-                        <div className="flex items-center space-x-2">
+                        <div className={`flex items-center space-x-2 p-3 rounded-lg transition-colors ${field.value === 'income' ? 'bg-green-50' : ''}`}>
                           <RadioGroupItem value="income" id="income" />
-                          <Label htmlFor="income" className="text-green-600 font-medium">
+                          <Label htmlFor="income" className="flex items-center text-green-600 font-medium">
+                            <div className="bg-green-100 text-green-800 rounded-full w-6 h-6 flex items-center justify-center mr-2">
+                              <span>+</span>
+                            </div>
                             รายรับ
                           </Label>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className={`flex items-center space-x-2 p-3 rounded-lg transition-colors ${field.value === 'expense' ? 'bg-red-50' : ''}`}>
                           <RadioGroupItem value="expense" id="expense" />
-                          <Label htmlFor="expense" className="text-red-600 font-medium">
+                          <Label htmlFor="expense" className="flex items-center text-red-600 font-medium">
+                            <div className="bg-red-100 text-red-800 rounded-full w-6 h-6 flex items-center justify-center mr-2">
+                              <span>-</span>
+                            </div>
                             รายจ่าย
                           </Label>
                         </div>
