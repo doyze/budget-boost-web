@@ -278,8 +278,7 @@ export const useSupabaseData = () => {
     deleteCategory,
     refreshTransactions: fetchTransactions,
     refreshCategories: fetchCategories,
-    uploadTransactionImage,
-    exportTransactionsToCSV
+    uploadTransactionImage
   };
 
 };
