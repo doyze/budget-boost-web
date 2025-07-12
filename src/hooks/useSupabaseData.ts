@@ -201,6 +201,71 @@ export const useSupabaseData = () => {
     return data.publicUrl;
   };
 
+  const exportTransactionsToCSV = (startDate: Date, endDate: Date): string => {
+    if (!user) throw new Error('User not authenticated');
+    
+    // กรองธุรกรรมตามช่วงเวลา
+    const filteredTransactions = transactions.filter(t => {
+      const transactionDate = new Date(t.date);
+      return transactionDate >= startDate && transactionDate <= endDate;
+    });
+    
+    // หากไม่มีข้อมูล
+    if (filteredTransactions.length === 0) {
+      throw new Error('ไม่พบข้อมูลธุรกรรมในช่วงเวลาที่เลือก');
+    }
+    
+    // สร้างข้อมูล CSV header
+    const headers = ['วันที่', 'ประเภท', 'หมวดหมู่', 'จำนวนเงิน', 'รายละเอียด'];
+    
+    // ฟังก์ชันสำหรับจัดการข้อความที่มีเครื่องหมายจุลภาค
+    const escapeCSV = (text: string) => {
+      // ถ้ามีเครื่องหมายจุลภาคหรือขึ้นบรรทัดใหม่ ให้ครอบด้วยเครื่องหมายคำพูด
+      if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+        // แทนที่เครื่องหมายคำพูดด้วยเครื่องหมายคำพูดซ้อน
+        return `"${text.replace(/"/g, '""')}"`;  
+      }
+      return text;
+    };
+    
+    // แปลงข้อมูลธุรกรรมเป็นรูปแบบ CSV
+    const csvRows = filteredTransactions.map(transaction => {
+      // หาชื่อหมวดหมู่จาก category_id
+      const category = categories.find(c => c.id === transaction.category_id);
+      const categoryName = category ? category.name : '';
+      
+      // แปลงประเภทธุรกรรมเป็นภาษาไทย
+      const typeInThai = transaction.type === 'income' ? 'รายรับ' : 'รายจ่าย';
+      
+      // จัดรูปแบบวันที่
+      const formattedDate = new Date(transaction.date).toLocaleDateString('th-TH');
+      
+      // สร้างแถวข้อมูล CSV
+      return [
+        escapeCSV(formattedDate),
+        escapeCSV(typeInThai),
+        escapeCSV(categoryName),
+        transaction.amount.toString(),
+        escapeCSV(transaction.description || '')
+      ];
+    });
+    
+    // เรียงลำดับตามวันที่จากเก่าไปใหม่
+    csvRows.sort((a, b) => {
+      const dateA = new Date(a[0].replace(/"/g, ''));
+      const dateB = new Date(b[0].replace(/"/g, ''));
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    // รวม header และข้อมูลเข้าด้วยกัน
+    const csvContent = [
+      headers.join(','),
+      ...csvRows.map(row => row.join(','))
+    ].join('\n');
+    
+    return csvContent;
+  };
+
   return {
     transactions,
     categories,
@@ -213,6 +278,8 @@ export const useSupabaseData = () => {
     deleteCategory,
     refreshTransactions: fetchTransactions,
     refreshCategories: fetchCategories,
-    uploadTransactionImage
+    uploadTransactionImage,
+    exportTransactionsToCSV
   };
+
 };
