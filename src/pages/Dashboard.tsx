@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import TransactionChart from '@/components/TransactionChart';
 import TransactionList from '@/components/TransactionList';
-import ExportCSVDialog from '@/components/ExportCSVDialog';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
@@ -87,16 +86,12 @@ const Dashboard = () => {
             </SelectContent>
           </Select>
           
-          <div className="flex gap-2">
-            <ExportCSVDialog className="w-full sm:w-auto" />
-            
-            <Link to="/add">
-              <Button className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                เพิ่มรายการ
-              </Button>
-            </Link>
-          </div>
+          <Link to="/add">
+            <Button className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              เพิ่มรายการ
+            </Button>
+          </Link>
         </div>
       </div>
 
