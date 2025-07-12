@@ -64,7 +64,7 @@ export const useSupabaseData = () => {
     }
     
     // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries(['transactions']);
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
     
     // ยังคงเรียก fetchTransactions เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
     await fetchTransactions();
@@ -87,7 +87,7 @@ export const useSupabaseData = () => {
     );
     
     // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries(['transactions']);
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
     
     // ยังคงเรียก fetchTransactions เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
     await fetchTransactions();
@@ -107,7 +107,7 @@ export const useSupabaseData = () => {
     setTransactions(prevTransactions => prevTransactions.filter(t => t.id !== id));
     
     // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries(['transactions']);
+    queryClient.invalidateQueries({ queryKey: ['transactions'] });
     
     // ยังคงเรียก fetchTransactions เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
     await fetchTransactions();
@@ -132,7 +132,7 @@ export const useSupabaseData = () => {
     }
     
     // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries(['categories']);
+    queryClient.invalidateQueries({ queryKey: ['categories'] });
     
     // ยังคงเรียก fetchCategories เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
     await fetchCategories();
@@ -155,7 +155,7 @@ export const useSupabaseData = () => {
     );
     
     // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries(['categories']);
+    queryClient.invalidateQueries({ queryKey: ['categories'] });
     
     // ยังคงเรียก fetchCategories เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
     await fetchCategories();
@@ -175,7 +175,7 @@ export const useSupabaseData = () => {
     setCategories(prevCategories => prevCategories.filter(c => c.id !== id));
     
     // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries(['categories']);
+    queryClient.invalidateQueries({ queryKey: ['categories'] });
     
     // ยังคงเรียก fetchCategories เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
     await fetchCategories();

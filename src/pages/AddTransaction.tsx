@@ -108,11 +108,7 @@ const AddTransaction = () => {
       navigate('/dashboard');
     } catch (error) {
       console.error('Error adding transaction:', error);
-      toast({
-        title: 'เกิดข้อผิดพลาด',
-        description: 'ไม่สามารถเพิ่มรายการได้',
-        variant: 'destructive'
-      });
+      toast.error('เกิดข้อผิดพลาด: ไม่สามารถเพิ่มรายการได้');
     } finally {
       setIsSubmitting(false);
     }
