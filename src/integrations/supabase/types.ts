@@ -23,6 +23,8 @@ export type Database = {
           name: string
           updated_at: string
           user_id: string
+          accounts_id?: string | null
+          accounts_id: string | null
         }
         Insert: {
           color?: string | null
@@ -37,6 +39,34 @@ export type Database = {
           color?: string | null
           created_at?: string
           icon?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+          accounts_id?: string | null
+        }
+        Relationships: []
+      }
+      my_accounts: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
           id?: string
           name?: string
           updated_at?: string
@@ -116,6 +146,7 @@ export type Database = {
           type: string
           updated_at: string
           user_id: string
+          accounts_id: string | null
         }
         Insert: {
           amount: number
@@ -128,6 +159,7 @@ export type Database = {
           type: string
           updated_at?: string
           user_id: string
+          accounts_id?: string | null
         }
         Update: {
           amount?: number
@@ -140,6 +172,7 @@ export type Database = {
           type?: string
           updated_at?: string
           user_id?: string
+          accounts_id?: string | null
         }
         Relationships: []
       }

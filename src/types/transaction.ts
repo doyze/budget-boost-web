@@ -1,4 +1,14 @@
-export interface Transaction {
+export type MyAccount = {
+  id: string;
+  user_id: string;
+  name: string;
+  type: 'cash' | 'bank' | 'credit' | 'investment' | 'other';
+  balance: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Transaction = {
   id: string;
   user_id: string;
   type: 'income' | 'expense';

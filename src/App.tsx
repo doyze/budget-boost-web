@@ -1,8 +1,6 @@
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
 import Dashboard from "@/pages/Dashboard";
@@ -12,16 +10,13 @@ import Navigation from "@/components/Navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
-
-const queryClient = new QueryClient();
+import DeleteTransaction from "./pages/DeleteTransaction";
+import Accounts from "./pages/Accounts";
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <ThemeProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+  <TooltipProvider>
+    <ThemeProvider>
+      <Sonner />
           <div className="min-h-screen bg-background">
             <Navigation />
             <main className="container mx-auto px-4 py-6">
@@ -42,14 +37,22 @@ const App = () => (
                     <Categories />
                   </ProtectedRoute>
                 } />
+                <Route path="/accounts" element={
+                  <ProtectedRoute>
+                    <Accounts />
+                  </ProtectedRoute>
+                } />
+                <Route path="/delete-transaction" element={
+                  <ProtectedRoute>
+                    <DeleteTransaction />
+                  </ProtectedRoute>
+                } />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
           </div>
-        </BrowserRouter>
-      </ThemeProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+    </ThemeProvider>
+  </TooltipProvider>
 );
 
 export default App;

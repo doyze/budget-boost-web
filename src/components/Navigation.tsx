@@ -14,6 +14,7 @@ const Navigation = () => {
     { to: '/', icon: Home, label: 'หน้าหลัก' },
     { to: '/add', icon: Plus, label: 'เพิ่มรายการ' },
     { to: '/categories', icon: Settings, label: 'จัดการหมวดหมู่' },
+    { to: '/accounts', icon: User, label: 'จัดการบัญชี' },
   ];
 
   return (

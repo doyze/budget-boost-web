@@ -1,284 +1,233 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { Transaction, Category } from '@/types/transaction';
-import { useQueryClient } from '@tanstack/react-query';
+import { Category, Transaction } from '@/types/transaction';
+import { useAuth } from './useAuth';
 
 export const useSupabaseData = () => {
-  const { user } = useAuth();
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  const fetchTransactions = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from('transactions')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false });
-    
-    setTransactions((data || []) as Transaction[]);
-  };
+  // Fetch all data
+  const fetchData = async () => {
+    if (!user) {
+      setCategories([]);
+      setTransactions([]);
+      setLoading(false);
+      return;
+    }
 
-  const fetchCategories = async () => {
-    if (!user) return;
-    
-    const { data } = await supabase
-      .from('categories')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('name');
-    
-    setCategories((data || []) as Category[]);
-  };
+    try {
+      setLoading(true);
+      
+      // Fetch categories and transactions in parallel
+      const [categoriesResult, transactionsResult] = await Promise.all([
+        supabase
+          .from('categories')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true }),
+        supabase
+          .from('transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+      ]);
 
-  useEffect(() => {
-    if (user) {
-      Promise.all([fetchTransactions(), fetchCategories()]).finally(() => {
-        setLoading(false);
-      });
-    } else {
+      if (categoriesResult.error) {
+        console.error('Error fetching categories:', categoriesResult.error);
+      } else {
+        setCategories(categoriesResult.data || []);
+      }
+
+      if (transactionsResult.error) {
+        console.error('Error fetching transactions:', transactionsResult.error);
+      } else {
+        setTransactions(transactionsResult.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
       setLoading(false);
     }
-  }, [user]);
+  };
 
-  const addTransaction = async (transaction: Omit<Transaction, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+  // Add category
+  const addCategory = async (categoryData: { name: string; icon: string; color: string }) => {
     if (!user) throw new Error('User not authenticated');
-    
-    const { error, data } = await supabase
-      .from('transactions')
-      .insert({
-        ...transaction,
-        user_id: user.id
-      })
-      .select();
-    
-    if (error) throw error;
-    
-    // อัปเดตข้อมูลในสถานะโดยตรงเพื่อให้ UI อัปเดตทันที
-    if (data && data.length > 0) {
-      setTransactions(prevTransactions => [data[0] as Transaction, ...prevTransactions]);
-    }
-    
-    // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    
-    // ยังคงเรียก fetchTransactions เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
-    await fetchTransactions();
-    
-    return data?.[0];
-  };
 
-  const updateTransaction = async (id: string, updates: Partial<Transaction>) => {
-    const { error, data } = await supabase
-      .from('transactions')
-      .update(updates)
-      .eq('id', id)
-      .select();
-    
-    if (error) throw error;
-    
-    // อัปเดตข้อมูลในสถานะโดยตรงเพื่อให้ UI อัปเดตทันที
-    setTransactions(prevTransactions => 
-      prevTransactions.map(t => t.id === id ? {...t, ...updates, updated_at: new Date().toISOString()} : t)
-    );
-    
-    // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    
-    // ยังคงเรียก fetchTransactions เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
-    await fetchTransactions();
-    
-    return data?.[0];
-  };
-
-  const deleteTransaction = async (id: string) => {
-    const { error } = await supabase
-      .from('transactions')
-      .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    // อัปเดตข้อมูลในสถานะโดยตรงเพื่อให้ UI อัปเดตทันที
-    setTransactions(prevTransactions => prevTransactions.filter(t => t.id !== id));
-    
-    // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries({ queryKey: ['transactions'] });
-    
-    // ยังคงเรียก fetchTransactions เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
-    await fetchTransactions();
-  };
-
-  const addCategory = async (category: Omit<Category, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    if (!user) throw new Error('User not authenticated');
-    
-    const { error, data } = await supabase
+    const { data, error } = await supabase
       .from('categories')
       .insert({
-        ...category,
+        ...categoryData,
         user_id: user.id
       })
-      .select();
-    
-    if (error) throw error;
-    
-    // อัปเดตข้อมูลในสถานะโดยตรงเพื่อให้ UI อัปเดตทันที
-    if (data && data.length > 0) {
-      setCategories(prevCategories => [...prevCategories, data[0] as Category]);
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding category:', error);
+      throw error;
     }
-    
-    // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries({ queryKey: ['categories'] });
-    
-    // ยังคงเรียก fetchCategories เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
-    await fetchCategories();
-    
-    return data?.[0];
+
+    setCategories(prev => [...prev, data]);
+    return data;
   };
 
-  const updateCategory = async (id: string, updates: Partial<Category>) => {
-    const { error, data } = await supabase
+  // Update category
+  const updateCategory = async (categoryId: string, categoryData: { name: string; icon: string; color: string }) => {
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
       .from('categories')
-      .update(updates)
-      .eq('id', id)
-      .select();
-    
-    if (error) throw error;
-    
-    // อัปเดตข้อมูลในสถานะโดยตรงเพื่อให้ UI อัปเดตทันที
-    setCategories(prevCategories => 
-      prevCategories.map(c => c.id === id ? {...c, ...updates, updated_at: new Date().toISOString()} : c)
-    );
-    
-    // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries({ queryKey: ['categories'] });
-    
-    // ยังคงเรียก fetchCategories เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
-    await fetchCategories();
-    
-    return data?.[0];
+      .update(categoryData)
+      .eq('id', categoryId)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+
+    setCategories(prev => prev.map(cat => cat.id === categoryId ? data : cat));
+    return data;
   };
 
-  const deleteCategory = async (id: string) => {
+  // Delete category
+  const deleteCategory = async (categoryId: string) => {
+    if (!user) throw new Error('User not authenticated');
+
     const { error } = await supabase
       .from('categories')
       .delete()
-      .eq('id', id);
-    
-    if (error) throw error;
-    
-    // อัปเดตข้อมูลในสถานะโดยตรงเพื่อให้ UI อัปเดตทันที
-    setCategories(prevCategories => prevCategories.filter(c => c.id !== id));
-    
-    // อัปเดต cache ของ React Query
-    queryClient.invalidateQueries({ queryKey: ['categories'] });
-    
-    // ยังคงเรียก fetchCategories เพื่อให้แน่ใจว่าข้อมูลถูกต้อง
-    await fetchCategories();
+      .eq('id', categoryId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
+
+    setCategories(prev => prev.filter(cat => cat.id !== categoryId));
   };
 
+  // Add transaction
+  const addTransaction = async (transactionData: {
+    type: 'income' | 'expense';
+    amount: number;
+    category_id?: string;
+    description?: string;
+    image_url?: string;
+    date: string;
+  }) => {
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({
+        ...transactionData,
+        user_id: user.id
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error adding transaction:', error);
+      throw error;
+    }
+
+    setTransactions(prev => [data, ...prev]);
+    return data;
+  };
+
+  // Update transaction
+  const updateTransaction = async (transactionId: string, transactionData: {
+    type: 'income' | 'expense';
+    amount: number;
+    category_id?: string;
+    description?: string;
+    date: string;
+    image_url?: string;
+  }) => {
+    if (!user) throw new Error('User not authenticated');
+
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(transactionData)
+      .eq('id', transactionId)
+      .eq('user_id', user.id)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error updating transaction:', error);
+      throw error;
+    }
+
+    setTransactions(prev => prev.map(t => t.id === transactionId ? data : t));
+    return data;
+  };
+
+  // Delete transaction
+  const deleteTransaction = async (transactionId: string) => {
+    if (!user) throw new Error('User not authenticated');
+
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', transactionId)
+      .eq('user_id', user.id);
+
+    if (error) {
+      console.error('Error deleting transaction:', error);
+      throw error;
+    }
+
+    setTransactions(prev => prev.filter(t => t.id !== transactionId));
+  };
+
+  // Upload transaction image
   const uploadTransactionImage = async (file: File): Promise<string> => {
+    if (!user) throw new Error('User not authenticated');
+
     const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}.${fileExt}`;
-    const filePath = `transaction-images/${fileName}`;
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
 
     const { error: uploadError } = await supabase.storage
       .from('transaction-images')
-      .upload(filePath, file);
+      .upload(fileName, file);
 
     if (uploadError) {
-      throw new Error('Failed to upload image');
+      console.error('Error uploading image:', uploadError);
+      throw uploadError;
     }
 
     const { data } = supabase.storage
       .from('transaction-images')
-      .getPublicUrl(filePath);
+      .getPublicUrl(fileName);
 
     return data.publicUrl;
   };
 
-  const exportTransactionsToCSV = (startDate: Date, endDate: Date): string => {
-    if (!user) throw new Error('User not authenticated');
-    
-    // กรองธุรกรรมตามช่วงเวลา
-    const filteredTransactions = transactions.filter(t => {
-      const transactionDate = new Date(t.date);
-      return transactionDate >= startDate && transactionDate <= endDate;
-    });
-    
-    // หากไม่มีข้อมูล
-    if (filteredTransactions.length === 0) {
-      throw new Error('ไม่พบข้อมูลธุรกรรมในช่วงเวลาที่เลือก');
-    }
-    
-    // สร้างข้อมูล CSV header
-    const headers = ['วันที่', 'ประเภท', 'หมวดหมู่', 'จำนวนเงิน', 'รายละเอียด'];
-    
-    // ฟังก์ชันสำหรับจัดการข้อความที่มีเครื่องหมายจุลภาค
-    const escapeCSV = (text: string) => {
-      // ถ้ามีเครื่องหมายจุลภาคหรือขึ้นบรรทัดใหม่ ให้ครอบด้วยเครื่องหมายคำพูด
-      if (text.includes(',') || text.includes('"') || text.includes('\n')) {
-        // แทนที่เครื่องหมายคำพูดด้วยเครื่องหมายคำพูดซ้อน
-        return `"${text.replace(/"/g, '""')}"`;  
-      }
-      return text;
-    };
-    
-    // แปลงข้อมูลธุรกรรมเป็นรูปแบบ CSV
-    const csvRows = filteredTransactions.map(transaction => {
-      // หาชื่อหมวดหมู่จาก category_id
-      const category = categories.find(c => c.id === transaction.category_id);
-      const categoryName = category ? category.name : '';
-      
-      // แปลงประเภทธุรกรรมเป็นภาษาไทย
-      const typeInThai = transaction.type === 'income' ? 'รายรับ' : 'รายจ่าย';
-      
-      // จัดรูปแบบวันที่
-      const formattedDate = new Date(transaction.date).toLocaleDateString('th-TH');
-      
-      // สร้างแถวข้อมูล CSV
-      return [
-        escapeCSV(formattedDate),
-        escapeCSV(typeInThai),
-        escapeCSV(categoryName),
-        transaction.amount.toString(),
-        escapeCSV(transaction.description || '')
-      ];
-    });
-    
-    // เรียงลำดับตามวันที่จากเก่าไปใหม่
-    csvRows.sort((a, b) => {
-      const dateA = new Date(a[0].replace(/"/g, ''));
-      const dateB = new Date(b[0].replace(/"/g, ''));
-      return dateA.getTime() - dateB.getTime();
-    });
-    
-    // รวม header และข้อมูลเข้าด้วยกัน
-    const csvContent = [
-      headers.join(','),
-      ...csvRows.map(row => row.join(','))
-    ].join('\n');
-    
-    return csvContent;
-  };
+  // Fetch data when user changes
+  useEffect(() => {
+    fetchData();
+  }, [user]);
 
   return {
-    transactions,
     categories,
+    transactions,
     loading,
-    addTransaction,
-    updateTransaction,
-    deleteTransaction,
     addCategory,
     updateCategory,
     deleteCategory,
-    refreshTransactions: fetchTransactions,
-    refreshCategories: fetchCategories,
-    uploadTransactionImage
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    uploadTransactionImage,
+    refetch: fetchData
   };
-
 };
