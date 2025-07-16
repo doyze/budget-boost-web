@@ -24,6 +24,7 @@ const transactionSchema = z.object({
   type: z.enum(['income', 'expense']),
   amount: z.number().min(0.01, 'จำนวนเงินต้องมากกว่า 0'),
   category_id: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
+  account_id: z.string().min(1, 'กรุณาเลือกกระเป๋าเงิน'),
   description: z.string().optional(),
   date: z.date()
 });
@@ -35,6 +36,7 @@ const AddTransaction = () => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<any[]>([]);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -45,19 +47,23 @@ const AddTransaction = () => {
       type: 'expense',
       amount: undefined,
       category_id: '',
+      account_id: '',
       description: '',
       date: new Date()
     }
   });
 
-  const { categories: supabaseCategories, uploadTransactionImage, addTransaction } = useSupabaseData();
+  const { categories: supabaseCategories, accounts: supabaseAccounts, uploadTransactionImage, addTransaction } = useSupabaseData();
   
-  // Set categories from useSupabaseData hook
+  // Set categories and accounts from useSupabaseData hook
   useEffect(() => {
     if (supabaseCategories) {
       setCategories(supabaseCategories);
     }
-  }, [supabaseCategories]);
+    if (supabaseAccounts) {
+      setAccounts(supabaseAccounts);
+    }
+  }, [supabaseCategories, supabaseAccounts]);
 
   const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -99,13 +105,14 @@ const AddTransaction = () => {
         type: data.type,
         amount: data.amount,
         category_id: data.category_id,
+        account_id: data.account_id,
         description: data.description,
         image_url: imageUrl,
         date: format(data.date, 'yyyy-MM-dd')
       });
 
       toast.success('เพิ่มรายการสำเร็จ');
-      navigate('/dashboard');
+      navigate('/');
     } catch (error) {
       console.error('Error adding transaction:', error);
       toast.error('เกิดข้อผิดพลาด: ไม่สามารถเพิ่มรายการได้');
@@ -181,6 +188,34 @@ const AddTransaction = () => {
                         onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Account - Required */}
+              <FormField
+                control={form.control}
+                name="account_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>กระเป๋าเงิน</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="เลือกกระเป๋าเงิน" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {accounts.map((account) => (
+                          <SelectItem key={account.id} value={account.id}>
+                            <div className="flex items-center space-x-2">
+                              <span>{account.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

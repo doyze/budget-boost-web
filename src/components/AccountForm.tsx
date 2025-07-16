@@ -11,45 +11,43 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { MyAccount } from "@/types/transaction";
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: "Account name must be at least 2 characters.",
+    message: "ชื่อกระเป๋าเงินต้องมีอย่างน้อย 2 ตัวอักษร",
   }),
-  type: z.string().min(2, {
-    message: "Account type must be at least 2 characters.",
-  }),
-  balance: z.coerce.number(),
+  description: z.string().optional(),
 });
 
 interface AccountFormProps {
   onSubmit: (values: z.infer<typeof formSchema>) => void;
   defaultValues?: MyAccount;
   onCancel: () => void;
+  isEditing?: boolean;
 }
 
-export function AccountForm({ onSubmit, defaultValues, onCancel }: AccountFormProps) {
+export function AccountForm({ onSubmit, defaultValues, onCancel, isEditing = false }: AccountFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: defaultValues?.name ?? "",
-      type: defaultValues?.type ?? "",
-      balance: defaultValues?.balance ?? 0,
+      description: defaultValues?.description ?? "",
     },
   });
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account Name</FormLabel>
+              <FormLabel>ชื่อกระเป๋าเงิน</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Savings" {...field} />
+                <Input placeholder="เช่น กระเป๋าเงินหลัก" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -57,33 +55,24 @@ export function AccountForm({ onSubmit, defaultValues, onCancel }: AccountFormPr
         />
         <FormField
           control={form.control}
-          name="type"
+          name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Account Type</FormLabel>
+              <FormLabel>รายละเอียดกระเป๋าเงิน</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Bank" {...field} />
+                <Textarea placeholder="รายละเอียดเพิ่มเติม (ไม่บังคับ)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <FormField
-          control={form.control}
-          name="balance"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Balance</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-                <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-          <Button type="submit">Submit</Button>
+        <div className="flex justify-center gap-4 pt-4">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            ยกเลิก
+          </Button>
+          <Button type="submit">
+            {isEditing ? "แก้กระเป๋าเงิน" : "เพิ่มกระเป๋าเงิน"}
+          </Button>
         </div>
       </form>
     </Form>

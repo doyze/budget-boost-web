@@ -6,6 +6,7 @@ import { Transaction, Category } from '@/types/transaction';
 interface TransactionChartProps {
   transactions: Transaction[];
   categories: Category[];
+  className?: string;
 }
 
 const COLORS = [
@@ -13,7 +14,7 @@ const COLORS = [
   '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0'
 ];
 
-const TransactionChart = ({ transactions, categories }: TransactionChartProps) => {
+const TransactionChart = ({ transactions, categories, className }: TransactionChartProps) => {
   const chartData = useMemo(() => {
     const incomeData: { [key: string]: number } = {};
     const expenseData: { [key: string]: number } = {};
@@ -117,7 +118,7 @@ const TransactionChart = ({ transactions, categories }: TransactionChartProps) =
   );
 
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader>
         <CardTitle>สัดส่วนรายรับรายจ่าย</CardTitle>
       </CardHeader>

@@ -12,6 +12,8 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import DeleteTransaction from "./pages/DeleteTransaction";
 import Accounts from "./pages/Accounts";
+import YearlySummary from "./pages/YearlySummary";
+import AccountDetail from "./pages/AccountDetail";
 
 const App = () => (
   <TooltipProvider>
@@ -42,9 +44,19 @@ const App = () => (
                     <Accounts />
                   </ProtectedRoute>
                 } />
+                <Route path="/yearly" element={
+                  <ProtectedRoute>
+                    <YearlySummary />
+                  </ProtectedRoute>
+                } />
                 <Route path="/delete-transaction" element={
                   <ProtectedRoute>
                     <DeleteTransaction />
+                  </ProtectedRoute>
+                } />
+                <Route path="/account/:accountId" element={
+                  <ProtectedRoute>
+                    <AccountDetail />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />

@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Plus, Settings, BarChart3, LogOut, User } from 'lucide-react';
+import { Home, Settings, BarChart3, LogOut, User, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,9 +12,9 @@ const Navigation = () => {
   
   const navItems = [
     { to: '/', icon: Home, label: 'หน้าหลัก' },
-    { to: '/add', icon: Plus, label: 'เพิ่มรายการ' },
+    { to: '/yearly', icon: BarChart3, label: 'สรุปรายปี' },
     { to: '/categories', icon: Settings, label: 'จัดการหมวดหมู่' },
-    { to: '/accounts', icon: User, label: 'จัดการบัญชี' },
+    { to: '/accounts', icon: Wallet, label: 'กระเป๋าเงิน' },
   ];
 
   return (

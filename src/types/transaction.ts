@@ -2,6 +2,7 @@ export type MyAccount = {
   id: string;
   user_id: string;
   name: string;
+  description?: string;
   type: 'cash' | 'bank' | 'credit' | 'investment' | 'other';
   balance: number;
   created_at: string;
@@ -14,6 +15,7 @@ export type Transaction = {
   type: 'income' | 'expense';
   amount: number;
   category_id?: string;
+  account_id: string;
   description?: string;
   image_url?: string;
   date: string;

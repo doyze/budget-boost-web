@@ -17,9 +17,10 @@ interface TransactionListProps {
   transactions: Transaction[];
   categories: Category[];
   title?: string;
+  className?: string;
 }
 
-const TransactionList = ({ transactions, categories, title = "รายการล่าสุด" }: TransactionListProps) => {
+const TransactionList = ({ transactions, categories, title = "รายการล่าสุด", className }: TransactionListProps) => {
   const { toast } = useToast();
   const { deleteTransaction } = useSupabaseData();
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -53,7 +54,7 @@ const TransactionList = ({ transactions, categories, title = "รายการ
 
   return (
     <>
-      <Card>
+      <Card className={className}>
         <CardHeader>
           <CardTitle>{title}</CardTitle>
         </CardHeader>

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Category, Transaction } from '@/types/transaction';
+import { Category, Transaction, MyAccount } from '@/types/transaction';
 import { useAuth } from './useAuth';
 
 export const useSupabaseData = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<MyAccount[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -14,6 +15,7 @@ export const useSupabaseData = () => {
     if (!user) {
       setCategories([]);
       setTransactions([]);
+      setAccounts([]);
       setLoading(false);
       return;
     }
@@ -21,8 +23,8 @@ export const useSupabaseData = () => {
     try {
       setLoading(true);
       
-      // Fetch categories and transactions in parallel
-      const [categoriesResult, transactionsResult] = await Promise.all([
+      // Fetch categories, transactions, and accounts in parallel
+      const [categoriesResult, transactionsResult, accountsResult] = await Promise.all([
         supabase
           .from('categories')
           .select('*')
@@ -32,7 +34,12 @@ export const useSupabaseData = () => {
           .from('transactions')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('my_accounts')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true })
       ]);
 
       if (categoriesResult.error) {
@@ -45,6 +52,12 @@ export const useSupabaseData = () => {
         console.error('Error fetching transactions:', transactionsResult.error);
       } else {
         setTransactions(transactionsResult.data || []);
+      }
+      
+      if (accountsResult.error) {
+        console.error('Error fetching accounts:', accountsResult.error);
+      } else {
+        setAccounts(accountsResult.data || []);
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -119,6 +132,7 @@ export const useSupabaseData = () => {
     type: 'income' | 'expense';
     amount: number;
     category_id?: string;
+    account_id: string;
     description?: string;
     image_url?: string;
     date: string;
@@ -148,6 +162,7 @@ export const useSupabaseData = () => {
     type: 'income' | 'expense';
     amount: number;
     category_id?: string;
+    account_id: string;
     description?: string;
     date: string;
     image_url?: string;
@@ -220,6 +235,7 @@ export const useSupabaseData = () => {
   return {
     categories,
     transactions,
+    accounts,
     loading,
     addCategory,
     updateCategory,

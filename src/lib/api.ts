@@ -3,12 +3,9 @@ import { z } from 'zod';
 
 const formSchema = z.object({
   name: z.string().min(2, {
-    message: 'Account name must be at least 2 characters.',
+    message: 'ชื่อกระเป๋าเงินต้องมีอย่างน้อย 2 ตัวอักษร',
   }),
-  type: z.string().min(2, {
-    message: 'Account type must be at least 2 characters.',
-  }),
-  balance: z.coerce.number(),
+  description: z.string().optional(),
 });
 
 export const getAccounts = async () => {
