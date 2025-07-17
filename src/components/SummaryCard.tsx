@@ -11,6 +11,7 @@ interface SummaryCardProps {
   formatter?: (value: number) => string;
   account_id?: string;
   onIconClick?: MouseEventHandler<HTMLDivElement>;
+  onClick?: MouseEventHandler<HTMLDivElement>;
 }
 
 const SummaryCard = ({
@@ -22,6 +23,7 @@ const SummaryCard = ({
   formatter = (val) => typeof val === 'number' ? `฿${val.toLocaleString()}` : val.toString(),
   account_id,
   onIconClick,
+  onClick,
 }: SummaryCardProps) => {
   const getColorClass = () => {
     switch (color) {
@@ -41,20 +43,28 @@ const SummaryCard = ({
   const formattedValue = typeof value === 'number' ? formatter(value) : value;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <Card 
+      className={`${onClick ? 'cursor-pointer hover:bg-muted/50' : ''} relative`}
+      onClick={onClick}
+    >
+      {icon && (
+        <div 
+          className={`${getColorClass()} ${onIconClick ? 'cursor-pointer hover:opacity-80' : ''} absolute top-1/2 right-4 transform -translate-y-1/2 z-10`} 
+          onClick={(e) => {
+            if (onIconClick) {
+              e.stopPropagation();
+              onIconClick(e);
+            }
+          }}
+          title={onIconClick ? 'คลิกเพื่อดูรายละเอียด' : undefined}
+        >
+          {icon}
+        </div>
+      )}
+      <CardHeader className="flex flex-row items-center space-y-0 pb-2 pr-16">
         <CardTitle className={`text-sm font-medium ${color !== 'default' ? getColorClass() : ''}`}>
           {title}
         </CardTitle>
-        {icon && (
-          <div 
-            className={`${getColorClass()} ${onIconClick ? 'cursor-pointer hover:opacity-80' : ''}`} 
-            onClick={onIconClick}
-            title={onIconClick ? 'คลิกเพื่อดูรายละเอียด' : undefined}
-          >
-            {icon}
-          </div>
-        )}
       </CardHeader>
       <CardContent>
         <div className={`text-xl md:text-2xl font-bold ${getColorClass()}`}>

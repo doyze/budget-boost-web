@@ -1,8 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { th } from 'date-fns/locale';
-import { ArrowLeft, Wallet } from 'lucide-react';
+import { ArrowLeft, Wallet, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
 import TransactionChart from '@/components/TransactionChart';
@@ -97,14 +97,22 @@ const AccountDetail = () => {
   return (
     <div className="space-y-6">
       {/* หัวข้อและปุ่มย้อนกลับ */}
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Wallet className="h-6 w-6" />
-          {account?.name || 'รายละเอียดบัญชี'}
-        </h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="icon" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Wallet className="h-6 w-6" />
+            {account?.name || 'รายละเอียดบัญชี'}
+          </h1>
+        </div>
+        <Link to={`/add?accountId=${accountId}`}>
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            เพิ่มรายการ
+          </Button>
+        </Link>
       </div>
 
       {/* ตัวเลือกเดือน */}
@@ -133,14 +141,6 @@ const AccountDetail = () => {
 
       {/* กราฟและรายการธุรกรรม */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <SummarySection title="กราฟสรุป" className="h-full">
-          <TransactionChart 
-            transactions={monthlyData.transactions} 
-            categories={categories} 
-            className="col-span-full"
-          />
-        </SummarySection>
-        
         <SummarySection 
           title="รายการธุรกรรม" 
           tag={format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: th })}
@@ -150,6 +150,15 @@ const AccountDetail = () => {
             transactions={monthlyData.transactions} 
             categories={categories}
             title={`รายการ ${format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: th })}`}
+            className="col-span-full"
+            accountId={accountId}
+          />
+        </SummarySection>
+        
+        <SummarySection title="กราฟสรุป" className="h-full">
+          <TransactionChart 
+            transactions={monthlyData.transactions} 
+            categories={categories} 
             className="col-span-full"
           />
         </SummarySection>

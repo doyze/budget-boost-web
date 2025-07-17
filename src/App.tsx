@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import DeleteTransaction from "./pages/DeleteTransaction";
+import EditTransaction from "./pages/EditTransaction";
 import Accounts from "./pages/Accounts";
 import YearlySummary from "./pages/YearlySummary";
 import AccountDetail from "./pages/AccountDetail";
@@ -52,6 +53,11 @@ const App = () => (
                 <Route path="/delete-transaction" element={
                   <ProtectedRoute>
                     <DeleteTransaction />
+                  </ProtectedRoute>
+                } />
+                <Route path="/edit-transaction" element={
+                  <ProtectedRoute>
+                    <EditTransaction />
                   </ProtectedRoute>
                 } />
                 <Route path="/account/:accountId" element={

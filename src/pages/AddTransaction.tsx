@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,6 +33,7 @@ type TransactionForm = z.infer<typeof transactionSchema>;
 
 const AddTransaction = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
@@ -40,6 +41,10 @@ const AddTransaction = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // ดึง accountId จาก URL query parameters
+  const queryParams = new URLSearchParams(location.search);
+  const accountIdFromUrl = queryParams.get('accountId') || '';
 
   const form = useForm<TransactionForm>({
     resolver: zodResolver(transactionSchema),
@@ -47,7 +52,7 @@ const AddTransaction = () => {
       type: 'expense',
       amount: undefined,
       category_id: '',
-      account_id: '',
+      account_id: accountIdFromUrl,
       description: '',
       date: new Date()
     }
@@ -110,6 +115,12 @@ const AddTransaction = () => {
         image_url: imageUrl,
         date: format(data.date, 'yyyy-MM-dd')
       });
+      
+      // ถ้ามาจากหน้า AccountDetail ให้กลับไปที่หน้านั้น
+      if (accountIdFromUrl) {
+        navigate(`/account/${accountIdFromUrl}`);
+        return;
+      }
 
       toast.success('เพิ่มรายการสำเร็จ');
       navigate('/');
@@ -194,32 +205,36 @@ const AddTransaction = () => {
               />
 
               {/* Account - Required */}
-              <FormField
-                control={form.control}
-                name="account_id"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>กระเป๋าเงิน</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="เลือกกระเป๋าเงิน" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {accounts.map((account) => (
-                          <SelectItem key={account.id} value={account.id}>
-                            <div className="flex items-center space-x-2">
-                              <span>{account.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {!accountIdFromUrl ? (
+                <FormField
+                  control={form.control}
+                  name="account_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>กระเป๋าเงิน</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="เลือกกระเป๋าเงิน" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {accounts.map((account) => (
+                            <SelectItem key={account.id} value={account.id}>
+                              <div className="flex items-center space-x-2">
+                                <span>{account.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : (
+                <input type="hidden" name="account_id" value={accountIdFromUrl} />
+              )}
 
               {/* Category */}
               <FormField

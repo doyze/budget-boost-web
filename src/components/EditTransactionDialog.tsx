@@ -23,7 +23,7 @@ const transactionSchema = z.object({
   type: z.enum(['income', 'expense']),
   amount: z.number().min(0.01, 'จำนวนเงินต้องมากกว่า 0'),
   category_id: z.string().min(1, 'กรุณาเลือกหมวดหมู่'),
-  description: z.string().min(1, 'กรุณาใส่รายละเอียด'),
+  description: z.string().optional(),
   date: z.date(),
   image_url: z.string().optional()
 });
@@ -44,7 +44,7 @@ const EditTransactionDialog = ({
   onOpenChange 
 }: EditTransactionDialogProps) => {
   const { toast } = useToast();
-  const { updateTransaction, uploadTransactionImage } = useSupabaseData();
+  const { updateTransaction, uploadTransactionImage, refetch } = useSupabaseData();
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(transaction.image_url || null);
 
@@ -90,15 +90,26 @@ const EditTransactionDialog = ({
         imageUrl = await uploadTransactionImage(imageFile);
       }
 
+      // แก้ไขปัญหาวันที่ถอยหลังไป 1 วัน
+      // สร้างวันที่ใหม่โดยใช้ปี เดือน วัน จากวันที่ที่ผู้ใช้เลือก
+      const selectedDate = data.date;
+      const year = selectedDate.getFullYear();
+      const month = selectedDate.getMonth();
+      const day = selectedDate.getDate();
+      const formattedDate = new Date(year, month, day, 12, 0, 0);
+      
       // อัปเดตรายการธุรกรรม
       const updatedTransaction = await updateTransaction(transaction.id, {
         type: data.type,
         amount: data.amount,
         category_id: data.category_id,
         description: data.description,
-        date: data.date.toISOString(),
+        date: formattedDate.toISOString(),
         image_url: imageUrl || undefined
       });
+
+      // ดึงข้อมูลใหม่เพื่ออัปเดตหน้าจอ
+      await refetch();
 
       toast({
         title: 'สำเร็จ',
@@ -263,10 +274,10 @@ const EditTransactionDialog = ({
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>รายละเอียด</FormLabel>
+                  <FormLabel>รายละเอียด (ไม่บังคับ)</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="ใส่รายละเอียดของรายการ"
+                      placeholder="ใส่รายละเอียดของรายการ (ไม่บังคับ)"
                       className="resize-none"
                       {...field}
                     />

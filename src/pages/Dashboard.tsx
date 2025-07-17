@@ -1,14 +1,11 @@
 import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { th } from 'date-fns/locale';
-import { Plus, CreditCard, Wallet } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Plus, Wallet } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useSupabaseData } from '@/hooks/useSupabaseData';
-import TransactionChart from '@/components/TransactionChart';
-import TransactionList from '@/components/TransactionList';
 import { Link, useNavigate } from 'react-router-dom';
-import { Transaction } from '@/types/transaction';
 import MonthYearSelector from '@/components/MonthYearSelector';
 import SummaryCard from '@/components/SummaryCard';
 import SummarySection from '@/components/SummarySection';
@@ -125,7 +122,7 @@ const Dashboard = () => {
               color="dynamic"
               subtitle={`รายรับ: ฿${accountIncome.toLocaleString()} | รายจ่าย: ฿${accountExpense.toLocaleString()}`}
               account_id={account.id}
-              onIconClick={() => handleAccountIconClick(account.id)}
+              onClick={() => handleAccountIconClick(account.id)}
             />
           );
         })}
@@ -145,29 +142,7 @@ const Dashboard = () => {
         )}
       </SummarySection>
 
-      {/* Chart and Transaction List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-        <SummarySection title="กราฟสรุป" className="h-full">
-          <TransactionChart 
-            transactions={monthlyData.transactions} 
-            categories={categories} 
-            className="col-span-full"
-          />
-        </SummarySection>
-        
-        <SummarySection 
-          title="รายการธุรกรรม" 
-          tag={format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: th })}
-          className="h-full"
-        >
-          <TransactionList 
-            transactions={monthlyData.transactions} 
-            categories={categories}
-            title={`รายการ ${format(new Date(selectedMonth + '-01'), 'MMMM yyyy', { locale: th })}`}
-            className="col-span-full"
-          />
-        </SummarySection>
-      </div>
+
     </div>
   );
 };
